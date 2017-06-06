@@ -23,7 +23,10 @@ ShoppingList.create('peppers', 4);
 Recipes.create(
   'boiled white rice', ['1 cup white rice', '2 cups water', 'pinch of salt']);
 Recipes.create(
-  'milkshake', ['2 tbsp cocoa', '2 cups vanilla ice cream', '1 cup milk']);
+  'milkshake', ['2 tbsp cocoa', '2 cups vanilla ice cream', '1 cup milk', 'something that brings all the boys to the yard']);
+Recipes.create('disaster', ['stick of dynamite', 'ATV', 'thin ice', 'poor judgment']);
+
+//--------------------------- Shopping List -----------------------------------------
 
 // when the root of this router is called with GET, return
 // all current ShoppingList items
@@ -86,6 +89,7 @@ app.delete('/shopping-list/:id', (req, res) => {
   res.status(204).end();
 });
 
+// ---------------------------------- Recipes ------------------------------------
 
 app.get('/recipes', (req, res) => {
   res.json(Recipes.get());
@@ -101,9 +105,45 @@ app.post('/recipes', jsonParser, (req, res) => {
       console.error(message);
       return res.status(400).send(message);
     }
+    else if (req.body.ingredients.length < 2) {
+      let message = 'Please enter at least 2 ingredients for the recipe.'
+      console.error(message);
+      return res.status(400).send(message);
+    }
   }
   const item = Recipes.create(req.body.name, req.body.ingredients);
   res.status(201).json(item);
+});
+
+app.put('/recipes/:id', jsonParser, (req, res) => {
+  const requiredFields = ['name', 'ingredients', 'id'];
+  for (let i=0; i<requiredFields.length; i++) {
+    const field = requiredFields[i];
+    if (!(field in req.body)) {
+      let message = `Missing \`${field}\` in request body`
+      console.error(message);
+      return res.status(400).send(message);
+    }
+    else if (req.body.ingredients.length < 2) {
+      let message = 'Please enter at least 2 ingredients for the recipe.'
+      console.error(message);
+      return res.status(400).send(message);
+    }
+  }
+  if (req.params.id !== req.body.id) {
+    let message = (
+      `Request path id (${req.params.id}) and request body id `
+      `(${req.body.id}) must match`);
+    console.error(message);
+    return res.status(400).send(message);
+  }
+  console.log(`Updating shopping list item \`${req.params.id}\``);
+  Recipes.update({
+    id: req.params.id,
+    name: req.body.name,
+    ingredients: req.body.ingredients
+  });
+  res.status(204).end();
 });
 
 app.delete('/recipes/:id', (req, res) => {
